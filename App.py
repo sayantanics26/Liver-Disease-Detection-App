@@ -7,17 +7,11 @@ import base64
 import io
 import os
 
-# -------------------------
-# Config
-# -------------------------
-MODEL_FILENAME = "model.pkl"  # put your trained sklearn model here
-BACKGROUND_IMAGE = "liver_bg.png"  # place a liver drawing image in the same folder
+MODEL_FILENAME = "model.pkl"  
+BACKGROUND_IMAGE = "liver_bg.png" 
 
 st.set_page_config(page_title="Liver Disease Detection", layout="centered")
 
-# -------------------------
-# Utility functions
-# -------------------------
 
 def load_model(path):
     try:
@@ -62,15 +56,10 @@ def set_background(img_path):
     st.markdown(css, unsafe_allow_html=True)
 
 
-# -------------------------
-# Main UI
-# -------------------------
 
 def main():
-    # Background
     set_background(BACKGROUND_IMAGE)
 
-    # Header / first impression
     st.markdown("""
     <div style='text-align:center; padding:10px;'>
       <h1 style='margin:0; font-size:42px;'>Liver health is important</h1>
@@ -80,12 +69,10 @@ def main():
 
     st.write("---")
 
-    # Layout: two columns, left for inputs, right for info + model upload
     col1, col2 = st.columns([2, 1])
 
     with col1:
         st.header("Enter patient parameters")
-        # Feature inputs as listed in user's image
         age = st.slider("Age of the patient", 1, 120, 45)
         gender = st.radio("Gender of the patient", options=["Male", "Female"])  # encode to numeric later
 
@@ -107,7 +94,6 @@ def main():
 
         uploaded_model = st.file_uploader("(Optional) Upload model.pkl", type=["pkl"])
         if uploaded_model is not None:
-            # save to disk for reuse
             model_path = os.path.join(os.getcwd(), MODEL_FILENAME)
             with open(model_path, "wb") as f:
                 f.write(uploaded_model.getbuffer())
@@ -127,18 +113,15 @@ def main():
             9: "A/G Ratio Albumin and Globulin Ratio"
         })
 
-    # Load model (from file system)
     model = load_model(MODEL_FILENAME)
     if model is None:
         st.warning("No model found in the app folder. Put your trained model file named 'model.pkl' in the folder, or upload one above.")
 
-    # Prediction action
     if predict_btn:
         if model is None:
             st.error("Cannot predict because no model is loaded.")
         else:
-            # Preprocess input into model's expected feature order
-            # Encoding gender: common datasets use 1=male, 0=female or vice versa. We'll default to Male=1 Female=0
+           
             gender_enc = 1 if gender == "Male" else 0
 
             X = np.array([[
@@ -154,26 +137,26 @@ def main():
                 float(ag_ratio)
             ]])
 
-            # If the model expects a DataFrame with named columns, try to convert
+         
             try:
                 # Attempt predict_proba
                 if hasattr(model, "predict_proba"):
                     proba = model.predict_proba(X)
-                    # If binary classification, proba[:,1] is probability of positive (disease)
+                   
                     if proba.shape[1] == 2:
                         p_disease = float(proba[:, 1][0])
                     else:
                         p_disease = float(np.max(proba))
                 else:
-                    # fallback to predict
+                  
                     pred = model.predict(X)[0]
-                    # assume label 1 means disease
+                  
                     p_disease = 1.0 if pred == 1 else 0.0
             except Exception as e:
                 st.error(f"Prediction error: {e}")
                 return
 
-            # Display results
+         
             colA, colB = st.columns([2, 3])
             with colA:
                 st.subheader("Result")
@@ -190,7 +173,6 @@ def main():
             st.write("\n")
             st.markdown("**Model note:** Predictions are only as good as the model and input features. This is a demo — consult a clinician for medical advice.")
 
-    # Footer with helpful tips
     st.write("---")
     st.markdown("**Tips while using this app**\n\n- Ensure your model expects the same feature order shown above.\n- Common label encoding for `Gender`: Male=1, Female=0 (adjust your preprocessing if different).\n- If your model was trained on scaled features, the app should apply the same scaler before prediction (include scaler in the pickle or adapt the code).\n")
 
@@ -199,11 +181,4 @@ if __name__ == "__main__":
     main()
 
 
-# -------------------------
-# Developer notes (keep in the folder with the script):
-# 1. Place your trained model in the same directory and name it 'model.pkl'. The pickle should contain
-#    either a scikit-learn estimator (with predict/predict_proba) or a pipeline which includes preprocessing.
-# 2. Place a liver background image named 'liver_bg.png' in the same directory (or edit BACKGROUND_IMAGE).
-# 3. Run with: streamlit run streamlit_liver_app.py
-# 4. If your model expects different feature order / scaling, update the X construction or wrap with a Pipeline.
-# -------------------------
+
