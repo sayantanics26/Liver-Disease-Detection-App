@@ -174,8 +174,6 @@ def main():
             st.markdown("**Model note:** Predictions are only as good as the model and input features. This is a demo — consult a clinician for medical advice.")
 
     st.write("---")
-    st.markdown("**Tips while using this app**\n\n- Ensure your model expects the same feature order shown above.\n- Common label encoding for `Gender`: Male=1, Female=0 (adjust your preprocessing if different).\n- If your model was trained on scaled features, the app should apply the same scaler before prediction (include scaler in the pickle or adapt the code).\n")
-
 
 if __name__ == "__main__":
     main()
